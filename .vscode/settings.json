@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "openthread_events.h": "c",
+        "utils.h": "c",
+        "device_history.h": "c",
+        "ip6.h": "c"
+    },
+    "nrf-connect.debugging.bindings": {
+        "${workspaceFolder}/build_1": "Launch build_1"
+    }
+}
