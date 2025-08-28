@@ -136,7 +136,7 @@ static otError coap_init(void)
     otInstance* instance = openthread_get_default_instance();
     otError error = OT_ERROR_NONE;
     static otCoapResource general_resource = {
-                        .mUriPath = "Hlth",  
+                        .mUriPath = "data",  
                         .mHandler = store_data_request_callback,  
                         .mContext = NULL,
                         .mNext    = NULL,
@@ -263,18 +263,6 @@ static int system_init(const struct device *dev)
 
 
 SYS_INIT(system_init, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -466,15 +454,11 @@ void openthread_event_thread(void* arg1,void* arg2,void* arg3)
         LOG_INF("CoAP istegi alindi");
         LOG_INF("Kaynak: %s: PORT: %d", peer_addr_str, msg_info.message_info.mPeerPort);
         LOG_INF("Hedef:  %s: PORT: %d", sock_addr_str, msg_info.message_info.mSockPort);
-        LOG_INF("Mesaj Uzunlugu: %d", msg_info.len);
-
-
-
-        // multicast gonderimi yapilabilir
+        LOG_INF("Mesaj: %.*s", msg_info.len, msg_info.message);
 
         memset(&msg_info, 0, sizeof(msg_info));
 
-        
+ 
     }
 }
 
@@ -482,120 +466,3 @@ K_THREAD_DEFINE(openthread_event_thread_id, OPENTHREAD_EVENTS_THREAD_STACK_SIZE,
 
 
 
-/**
- * @brief  OpenThread üzerinden CoAP multicast mesajı gönderen fonksiyon.
- *
- * Bu fonksiyon, belirtilen komutu ve boyutu alarak OpenThread CoAP
- * multicast yayını yapar.
- *
- * @param cmd     Gönderilecek veri buffer'ı (byte dizisi).
- * @param size    Gönderilecek veri boyutu (byte).
- * @param ipaddr  Hedef IPv6 adresi (string). Tüm cihazlara gönderim için özel adres kullanılabilir.
- *
- * @return OT_ERROR_NONE  Başarılı
- * @return Diğer otError kodları  Gönderim sırasında oluşan hata
- *
- * @note
- * - Gönderim tipi Non-Confirmable (ACK istemeyen) olarak ayarlanmıştır.
- * - Hata durumunda log ERR seviyesinde yazılır.
- * - Başarılı ise log INF seviyesinde yayın yapıldığı belirtilir.
- */
-otError openthread_multicast_send(const uint8_t* cmd, uint16_t size,const char* ipaddr)
-{
-
-    otError err = openthread_coap_send_multicast(HEALTH,cmd,&size,OT_COAP_TYPE_NON_CONFIRMABLE,OT_COAP_CODE_PUT,ipaddr);
-    if(err)
-    {
-        LOG_ERR("[HATA] %s",otThreadErrorToString(err));
-        return err  ;
-    }
-    LOG_INF("Multicast yayini yapildi");
-
-    return err;
-    
-
-}
-
-
-
-/**
- * @brief CoAP çoklu gönderim mesajını hazırlar ve yollar.
- */
-static otError openthread_coap_send_multicast(const inolink_uri_path_t uri_path,const uint8_t* msg , uint16_t *buffer_index, const otCoapType a_type, const otCoapCode a_code ,const char* ipaddr)
-{
-    LOG_WRN("CoAP mesaji hazirlaniyor");
-    if (msg == NULL || buffer_index == NULL || *buffer_index == 0 ) {
-        LOG_ERR("Gecersiz parametre: msg/buffer_index hatali");
-        return OT_ERROR_INVALID_ARGS;
-    }
-
-    otMessage *message = NULL;
-    otMessageInfo message_info;
-    otInstance *instance = openthread_get_default_instance();
-
-    if (instance == NULL) {
-        LOG_ERR("OpenThread instance alinamadi");
-        return OT_ERROR_INVALID_STATE;
-    }
-    uint8_t payload[BUFFER_SIZE] = {0};
-    *buffer_index = *buffer_index > BUFFER_SIZE ? *buffer_index = BUFFER_SIZE : *buffer_index;
-    memcpy(payload,msg,*buffer_index);
-    message = otCoapNewMessage(instance, NULL);
-    if (message == NULL) {
-        LOG_ERR("CoAP istegi icin mesaj olusturulamadi");
-        goto exit;
-    }
-
-    otCoapMessageInit(message, a_type, a_code);
-
-    otError error = otCoapMessageAppendUriPathOptions(message, OPENTHREAD_COAP_URI_HEALTH);
-    if (error != OT_ERROR_NONE) {
-        LOG_ERR("URI path eklenemedi, hata: %d", error);
-        goto exit;
-    }
-
-
-    error = otCoapMessageSetPayloadMarker(message);
-    if (error != OT_ERROR_NONE) {
-        LOG_ERR("Payload marker eklenemedi, hata: %d", error);
-        goto exit;
-    }
-
-    error = otMessageAppend(message, payload, *buffer_index);
-    if (error != OT_ERROR_NONE) {
-        LOG_ERR("Payload CoAP mesajina eklenemedi, hata: %d", error);
-        goto exit;
-    }
-    LOG_DBG("Payload CoAP mesajina eklendi");
-
-    memset(&message_info, 0, sizeof(message_info));
-    const char *destination_ip = ipaddr;
-    if (!destination_ip) {
-        LOG_ERR("Hedef IP adresi gecersiz");
-        error = OT_ERROR_INVALID_ARGS;
-        goto exit;
-    }
-
-    error = otIp6AddressFromString(destination_ip, &message_info.mPeerAddr);
-    if (error != OT_ERROR_NONE) {
-        LOG_ERR("Hedef IP adresi olusturulamadi, hata: %d", error);
-        goto exit;
-    }
-
-    message_info.mPeerPort = OT_DEFAULT_COAP_PORT;
-    error = otCoapSendRequest(instance, message, &message_info, NULL, NULL);
-    if (error != OT_ERROR_NONE) {
-        LOG_ERR("CoAP istegi gonderilemedi, hata: %d", error);
-        goto exit;
-    }
-    LOG_INF("Multicast yayini yapildi");
-    return OT_ERROR_NONE;
-
-exit:
-    if (message) {
-        LOG_ERR("Mesaj gonderimi basarisiz, kaynaklar serbest birakiliyor");
-        otMessageFree(message);
-
-    }
-    return error;
-}
