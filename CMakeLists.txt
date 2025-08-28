@@ -3,7 +3,7 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 project(OPENTHREAD_SERVER)
 
-target_sources(app PRIVATE src/main.c)
+
 
 target_include_directories(app PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/openthread_events)
 target_include_directories(app PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/utils)
