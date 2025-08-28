@@ -2,6 +2,8 @@
 
 Bu proje, Zephyr RTOS uzerinde nRF52840 ile OpenThread FTD ve CoAP sunucusu calistirir. CoAP isteklerini karsilar, mesajlari kuyruklar ve loglar.
 
+OPENTHREAD_CLIENT ile birlikte client-server demo sistemi oluşturur.
+
 ### Ornek Log Ciktisi (Gelen CoAP Mesaji)
 ```text
 [00:01:27.178,436] <inf> openthread_events: CoAP istegi alindi
