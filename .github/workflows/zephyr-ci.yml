@@ -16,20 +16,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Initialize West and Install Modules
+      - name: Install Dependencies
         run: |
-          # Docker içinde eksik olan pip ve git araçlarını kuruyoruz
+          # 1. Gerekli araçları yüklüyoruz (pip, git, west)
           apt-get -y update
           apt-get -y install python3-pip git
-          
-          # West aracını kuruyoruz
           pip3 install -U west
-          
-          # West yapılandırması
-          west init -l .
-          west update
-          west zephyr-export
+
+          # BURADA DEĞİŞİKLİK YAPTIK:
+          # 'west init', 'west update' komutlarını SİLDİK.
+          # Çünkü Docker içinde SDK zaten hazır ve senin projende west.yml yok.
 
       - name: Build application
         run: |
+          # Direkt build komutunu çalıştırıyoruz.
+          # Docker içindeki SDK (ZEPHYR_BASE) otomatik algılanır.
           west build -b nrf52840dk_nrf52840 -p always
