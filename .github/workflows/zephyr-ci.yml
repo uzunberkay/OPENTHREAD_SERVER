@@ -40,5 +40,6 @@ jobs:
       - name: Build application
         run: |
           cd zephyrproject
-          west build -b nrf52840dk -s ../app -p always
+          west build -b nrf52840dk/nrf52840 -s ../app -p always
+
 
