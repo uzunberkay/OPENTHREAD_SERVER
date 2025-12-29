@@ -11,8 +11,10 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Checkout repository
+      - name: Checkout application
         uses: actions/checkout@v4
+        with:
+          path: app
 
       - name: Install system dependencies
         run: |
@@ -28,6 +30,14 @@ jobs:
           pip3 install --user west
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
+      - name: Init Zephyr workspace
+        run: |
+          west init zephyrproject
+          cd zephyrproject
+          west update
+          west zephyr-export
+
       - name: Build application
         run: |
-          west build -b nrf52840dk_nrf52840 -p always
+          cd zephyrproject
+          west build -b nrf52840dk_nrf52840 -s ../app -p always
