@@ -1,0 +1,42 @@
+name: Zephyr CI
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            git cmake ninja-build gperf \
+            python3-pip python3-setuptools python3-wheel \
+            device-tree-compiler xz-utils file \
+            gcc-multilib g++-multilib
+
+      - name: Install west
+        run: |
+          pip3 install --user west
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Init west workspace
+        run: |
+          west init -l .
+          west update
+
+      - name: Export Zephyr environment
+        run: |
+          west zephyr-export
+
+      - name: Build application
+        run: |
+          west build -b nrf52840dk_nrf52840 -p always
