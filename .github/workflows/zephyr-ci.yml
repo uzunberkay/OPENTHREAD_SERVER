@@ -9,8 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    # KRİTİK NOKTA: İşlemi Nordic'in hazır container'ı içinde yapıyoruz.
-    # Bu imajda toolchain ve gereksinimler v2.4 için hazırdır.
+    # Resmi Nordic imajını kullanmaya devam ediyoruz
     container:
       image: nordicplayground/nrfconnect-sdk:v2.4-branch
 
@@ -18,15 +17,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # setup-ncs yerine west'i manuel initialize ediyoruz.
-      # Bu adım projenin bağımlılıklarını çeker.
-      - name: Initialize West and Install Modules
+      - name: Initialize West
+        # İŞTE ÇÖZÜM BURADA:
+        # West aracını görünür yapmak için tekrar yüklüyoruz (1 saniye sürer)
         run: |
+          pip3 install -U west
           west init -l .
           west update
           west zephyr-export
 
       - name: Build application
-        # Build komutun aynı kalıyor
         run: |
           west build -b nrf52840dk_nrf52840 -p always
