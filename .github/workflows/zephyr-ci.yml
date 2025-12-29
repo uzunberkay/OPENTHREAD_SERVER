@@ -9,12 +9,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    container:
-      image: ghcr.io/nordicsemiconductor/nrfconnect-sdk:v2.4.0
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup nRF Connect SDK
+        uses: nrfconnect/setup-ncs@v1
+        with:
+          version: v2.4.0
 
       - name: Build application
         run: |
