@@ -1,4 +1,4 @@
-name: Zephyr CI
+name: NCS CI
 
 on:
   push:
@@ -9,37 +9,13 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
+    container:
+      image: ghcr.io/nordicsemiconductor/nrfconnect-sdk:2.4.0
 
     steps:
-      - name: Checkout application
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          path: app
-
-      - name: Install system dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y \
-            git cmake ninja-build gperf \
-            python3-pip python3-setuptools python3-wheel \
-            device-tree-compiler xz-utils file \
-            gcc-multilib g++-multilib
-
-      - name: Install west
-        run: |
-          pip3 install --user west
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Init Zephyr workspace
-        run: |
-          west init zephyrproject
-          cd zephyrproject
-          west update
-          west zephyr-export
 
       - name: Build application
         run: |
-          cd zephyrproject
-          west build -b nrf52840dk/nrf52840 -s ../app -p always
-
-
+          west build -b nrf52840dk_nrf52840 -p always
