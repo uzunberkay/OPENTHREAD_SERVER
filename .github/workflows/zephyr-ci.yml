@@ -18,17 +18,28 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          # 1. Gerekli araçları yüklüyoruz (pip, git, west)
           apt-get -y update
           apt-get -y install python3-pip git
           pip3 install -U west
 
-          # BURADA DEĞİŞİKLİK YAPTIK:
-          # 'west init', 'west update' komutlarını SİLDİK.
-          # Çünkü Docker içinde SDK zaten hazır ve senin projende west.yml yok.
-
       - name: Build application
         run: |
-          # Direkt build komutunu çalıştırıyoruz.
-          # Docker içindeki SDK (ZEPHYR_BASE) otomatik algılanır.
-          west build -b nrf52840dk_nrf52840 -p always
+          # 1. ADIM: Docker içindeki SDK'nın yerini buluyoruz (Genelde /ncs/zephyr'dir)
+          # Bu komut zephyr klasörünü arar ve yolunu ZEPHYR_BASE değişkenine atar.
+          export ZEPHYR_BASE=$(find / -type d -name zephyr | grep "ncs/zephyr" | head -n 1)
+          
+          echo "Zephyr SDK bulundu: $ZEPHYR_BASE"
+          
+          # Eğer bulamazsa hata verip durduralım
+          if [ -z "$ZEPHYR_BASE" ]; then
+            echo "HATA: SDK bulunamadı!"
+            exit 1
+          fi
+
+          # 2. ADIM: West'e bu yolu gösteriyoruz
+          # Artık west, 'build' komutunu bu klasörden yükleyecek.
+          west config --global zephyr.base-dir $ZEPHYR_BASE
+          
+          # 3. ADIM: Derleme
+          # -s . parametresi "kaynak kod burası" demek.
+          west build -b nrf52840dk_nrf52840 -s . -p always
