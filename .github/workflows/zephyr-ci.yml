@@ -9,7 +9,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    # Resmi Nordic imajını kullanmaya devam ediyoruz
     container:
       image: nordicplayground/nrfconnect-sdk:v2.4-branch
 
@@ -17,11 +16,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Initialize West
-        # İŞTE ÇÖZÜM BURADA:
-        # West aracını görünür yapmak için tekrar yüklüyoruz (1 saniye sürer)
+      - name: Initialize West and Install Modules
         run: |
+          # Docker içinde eksik olan pip ve git araçlarını kuruyoruz
+          apt-get -y update
+          apt-get -y install python3-pip git
+          
+          # West aracını kuruyoruz
           pip3 install -U west
+          
+          # West yapılandırması
           west init -l .
           west update
           west zephyr-export
