@@ -76,6 +76,7 @@ static otError openthread_init(void)
     uint8_t retry_count = 0;
     do
     {
+        LOG_ERR("%dd",x);
          error = otLinkSetExtendedAddress(instance, &device_mac_addr);
          if(error == OT_ERROR_NONE)
          {
